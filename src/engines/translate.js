@@ -3,20 +3,64 @@ import { pipeline } from "@huggingface/transformers";
 const MODEL_ID = "onnx-community/Qwen2.5-1.5B-Instruct";
 
 let generatorPromise = null;
+let webgpuUsable = null; // cached tri-state: null = not probed yet
 
-export function hasWebGPU() {
+/** Sync presence check only — the API can exist but still fail to produce a real adapter. */
+export function hasWebGPUApi() {
   return typeof navigator !== "undefined" && !!navigator.gpu;
 }
 
-/** Lazily loads (and caches) the on-device text-generation pipeline. */
-export function loadOnDeviceModel(onProgress) {
-  if (!generatorPromise) {
-    generatorPromise = pipeline("text-generation", MODEL_ID, {
-      device: hasWebGPU() ? "webgpu" : "wasm",
-      dtype: "q4",
-      progress_callback: onProgress,
-    });
+/** Actually requests a GPU adapter to confirm WebGPU is usable, not just present. Cached. */
+export async function detectWebGPU() {
+  if (webgpuUsable !== null) return webgpuUsable;
+  if (!hasWebGPUApi()) {
+    webgpuUsable = false;
+    return false;
   }
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    webgpuUsable = !!adapter;
+  } catch {
+    webgpuUsable = false;
+  }
+  return webgpuUsable;
+}
+
+/**
+ * Lazily loads (and caches) the on-device text-generation pipeline.
+ * Probes WebGPU first; if the adapter request or the pipeline load itself
+ * fails (some phones expose navigator.gpu but can't actually get an
+ * adapter), falls back to the WASM backend automatically.
+ */
+export function loadOnDeviceModel(onProgress) {
+  if (generatorPromise) return generatorPromise;
+
+  const load = async () => {
+    const useWebGPU = await detectWebGPU();
+    try {
+      return await pipeline("text-generation", MODEL_ID, {
+        device: useWebGPU ? "webgpu" : "wasm",
+        // q4f16 (int4 weights + fp16 compute) is the combo transformers.js
+        // documents as correct for the WebGPU backend; plain "q4" is for wasm.
+        dtype: useWebGPU ? "q4f16" : "q4",
+        progress_callback: onProgress,
+      });
+    } catch (err) {
+      if (!useWebGPU) throw err;
+      console.warn("WebGPU load failed, falling back to WASM:", err);
+      webgpuUsable = false;
+      return pipeline("text-generation", MODEL_ID, {
+        device: "wasm",
+        dtype: "q4",
+        progress_callback: onProgress,
+      });
+    }
+  };
+
+  generatorPromise = load().catch((err) => {
+    generatorPromise = null; // allow retrying on the next call instead of caching a rejection
+    throw err;
+  });
   return generatorPromise;
 }
 
@@ -80,14 +124,29 @@ export function parseResponse(raw) {
   };
 }
 
-export async function translateOnDevice(direction, text, onProgress) {
-  const generator = await loadOnDeviceModel(onProgress);
+async function runGeneration(generator, direction, text) {
   const messages = buildMessages(direction, text);
   const output = await generator(messages, { max_new_tokens: 512, do_sample: false });
   const reply = output[0].generated_text;
   const last = Array.isArray(reply) ? reply.at(-1) : null;
   const raw = last ? last.content : String(reply);
   return parseResponse(raw);
+}
+
+export async function translateOnDevice(direction, text, onProgress) {
+  try {
+    const generator = await loadOnDeviceModel(onProgress);
+    return await runGeneration(generator, direction, text);
+  } catch (err) {
+    // A WebGPU failure can also surface only once real inference runs
+    // (not just at pipeline-load time). Force WASM and retry once.
+    if (webgpuUsable === false) throw err;
+    console.warn("On-device generation failed, retrying on WASM:", err);
+    webgpuUsable = false;
+    generatorPromise = null;
+    const generator = await loadOnDeviceModel(onProgress);
+    return runGeneration(generator, direction, text);
+  }
 }
 
 export async function translateGemini(direction, text, apiKey, model = "gemini-2.5-flash") {

@@ -1,9 +1,8 @@
-import { hasWebGPU } from "../engines/translate.js";
+import { detectWebGPU } from "../engines/translate.js";
 import { loadSettings, saveSettings, getCacheUsageMB, clearModelCache } from "../engines/settings-store.js";
 
 export function renderSettingsPanel(container) {
   const settings = loadSettings();
-  const gpuSupported = hasWebGPU();
 
   container.innerHTML = `
     <section class="settings-block">
@@ -27,7 +26,7 @@ export function renderSettingsPanel(container) {
 
     <section class="settings-block">
       <h3>기기 상태</h3>
-      <p>WebGPU: <strong>${gpuSupported ? "지원됨 (빠름)" : "미지원 (WASM으로 대체, 느릴 수 있음)"}</strong></p>
+      <p id="webgpu-status">WebGPU: <strong>확인 중…</strong></p>
       <p id="cache-usage">캐시 용량 확인 중…</p>
       <button id="clear-cache-btn" class="secondary-btn">모델 캐시 삭제</button>
     </section>
@@ -55,6 +54,16 @@ export function renderSettingsPanel(container) {
   });
 
   refreshCacheUsage(container);
+  refreshWebGPUStatus(container);
+}
+
+async function refreshWebGPUStatus(container) {
+  const el = container.querySelector("#webgpu-status");
+  if (!el) return;
+  const usable = await detectWebGPU();
+  el.innerHTML = usable
+    ? "WebGPU: <strong>지원됨 (빠름)</strong>"
+    : "WebGPU: <strong>미지원 (WASM으로 대체, 느릴 수 있음)</strong>";
 }
 
 async function refreshCacheUsage(container) {

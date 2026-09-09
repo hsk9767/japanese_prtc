@@ -71,3 +71,23 @@ function escapeText(text) {
 export function renderError(container, message) {
   container.innerHTML = `<p class="error">${escapeText(message)}</p>`;
 }
+
+/**
+ * Best-effort human-readable dump of a caught error, for phones where
+ * checking the JS console isn't practical. Handles Error instances,
+ * DOMException/WebGPU errors that carry name+message, plain strings,
+ * and anything else that doesn't fit those shapes.
+ */
+export function formatErrorDetail(err) {
+  if (!err) return "알 수 없는 오류가 발생했습니다.";
+  if (typeof err === "string") return err;
+  const parts = [];
+  if (err.name) parts.push(err.name);
+  if (err.message) parts.push(err.message);
+  if (parts.length) return parts.join(": ");
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}

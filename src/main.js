@@ -1,7 +1,7 @@
 import "./style.css";
 import { translate, isOnDeviceModelLoaded } from "./engines/translate.js";
 import { loadSettings } from "./engines/settings-store.js";
-import { renderResult, renderError } from "./ui/result-view.js";
+import { renderResult, renderError, formatErrorDetail } from "./ui/result-view.js";
 import { renderSettingsPanel } from "./ui/settings-panel.js";
 
 const tabButtons = document.querySelectorAll(".tab-btn");
@@ -62,7 +62,7 @@ function wireTranslatePanel(direction) {
       status.textContent = "";
     } catch (err) {
       console.error(err);
-      renderError(result, err.message || "번역 중 오류가 발생했습니다.");
+      renderError(result, formatErrorDetail(err));
       status.textContent = "";
     } finally {
       btn.disabled = false;
