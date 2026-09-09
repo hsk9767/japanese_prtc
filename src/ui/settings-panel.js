@@ -22,7 +22,7 @@ export function renderSettingsPanel(container) {
         <input type="radio" name="engine" value="on-device" ${settings.engine === "on-device" ? "checked" : ""} />
         내장 모델 (실험적, 100% 폰에서 처리·무료·오프라인)
       </label>
-      <p class="hint">1.5B 모델을 폰 GPU/CPU로 직접 돌립니다. 기기에 따라 메모리 부족으로 실패할 수 있어요.</p>
+      <p class="hint">0.5B 모델을 폰 GPU/CPU로 직접 돌립니다. 기기에 따라 메모리 부족으로 실패할 수 있어요.</p>
     </section>
 
     <section class="settings-block">

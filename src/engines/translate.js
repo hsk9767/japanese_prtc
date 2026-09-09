@@ -1,6 +1,8 @@
 import { pipeline } from "@huggingface/transformers";
 
-const MODEL_ID = "onnx-community/Qwen2.5-1.5B-Instruct";
+// 1.5B crashed with a WASM OOM RuntimeError on the phones tested so far;
+// 0.5B is roughly a third of the params/memory footprint.
+const MODEL_ID = "onnx-community/Qwen2.5-0.5B-Instruct";
 
 let generatorPromise = null;
 let webgpuUsable = null; // cached tri-state: null = not probed yet
