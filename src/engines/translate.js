@@ -161,6 +161,9 @@ export async function translateGemini(direction, text, apiKey, model = "gemini-3
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
         contents: [{ role: "user", parts: [{ text }] }],
+        // Gemini 3 models "think" before answering by default, which adds
+        // several seconds of latency that a short translation doesn't need.
+        generationConfig: { thinkingConfig: { thinkingLevel: "low" } },
       }),
     },
   );
