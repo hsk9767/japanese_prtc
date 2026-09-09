@@ -37,7 +37,7 @@ function wireTranslatePanel(direction) {
     result.innerHTML = "";
 
     const settings = loadSettings();
-    const usingOnDevice = settings.engine !== "gemini" || !settings.geminiApiKey;
+    const usingOnDevice = settings.engine === "on-device";
 
     if (usingOnDevice && !isOnDeviceModelLoaded()) {
       status.textContent = "내장 모델을 처음 준비하는 중입니다 (최대 1GB 다운로드, Wi-Fi 권장)…";
@@ -78,3 +78,8 @@ if ("serviceWorker" in navigator) {
     import("virtual:pwa-register").then(({ registerSW }) => registerSW({ immediate: true }));
   });
 }
+
+// The on-device model cache is several hundred MB; ask the browser to
+// treat it as persistent so it's less likely to be evicted under
+// storage pressure (best-effort — the browser can still refuse).
+navigator.storage?.persist?.().catch(() => {});

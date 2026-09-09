@@ -1,7 +1,10 @@
 const STORAGE_KEY = "jp-ko-app:settings";
 
 const defaults = {
-  engine: "on-device", // 'on-device' | 'gemini'
+  // Qwen2.5-1.5B crashed (WASM OOM) on-device on the phones tested so far,
+  // so Gemini is the default/primary engine for now; on-device stays as an
+  // opt-in experiment for lighter models / more capable devices later.
+  engine: "gemini", // 'on-device' | 'gemini'
   geminiApiKey: "",
 };
 

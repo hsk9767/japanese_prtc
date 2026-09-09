@@ -8,12 +8,8 @@ export function renderSettingsPanel(container) {
     <section class="settings-block">
       <h3>번역 엔진</h3>
       <label class="radio-row">
-        <input type="radio" name="engine" value="on-device" ${settings.engine === "on-device" ? "checked" : ""} />
-        내장 모델 (100% 폰에서 처리, 무료·오프라인)
-      </label>
-      <label class="radio-row">
         <input type="radio" name="engine" value="gemini" ${settings.engine === "gemini" ? "checked" : ""} />
-        Gemini API (더 좋은 품질, API 키 필요)
+        Gemini API (기본값, 안정적/고품질, API 키 필요)
       </label>
       <input
         type="password"
@@ -22,6 +18,11 @@ export function renderSettingsPanel(container) {
         value="${settings.geminiApiKey ? escapeAttr(settings.geminiApiKey) : ""}"
       />
       <p class="hint">키는 이 기기의 브라우저에만 저장되고 외부로 전송되지 않습니다.</p>
+      <label class="radio-row">
+        <input type="radio" name="engine" value="on-device" ${settings.engine === "on-device" ? "checked" : ""} />
+        내장 모델 (실험적, 100% 폰에서 처리·무료·오프라인)
+      </label>
+      <p class="hint">1.5B 모델을 폰 GPU/CPU로 직접 돌립니다. 기기에 따라 메모리 부족으로 실패할 수 있어요.</p>
     </section>
 
     <section class="settings-block">

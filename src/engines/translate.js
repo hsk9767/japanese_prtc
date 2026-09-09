@@ -175,7 +175,10 @@ export async function translateGemini(direction, text, apiKey, model = "gemini-2
  * Unified entry point. `settings` = { engine: 'on-device' | 'gemini', geminiApiKey }
  */
 export async function translate(direction, text, settings, onProgress) {
-  if (settings.engine === "gemini" && settings.geminiApiKey) {
+  if (settings.engine === "gemini") {
+    if (!settings.geminiApiKey) {
+      throw new Error("설정 탭에서 Gemini API 키를 먼저 입력해주세요.");
+    }
     return translateGemini(direction, text, settings.geminiApiKey);
   }
   return translateOnDevice(direction, text, onProgress);
