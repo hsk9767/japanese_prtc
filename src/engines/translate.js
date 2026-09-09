@@ -151,7 +151,7 @@ export async function translateOnDevice(direction, text, onProgress) {
   }
 }
 
-export async function translateGemini(direction, text, apiKey, model = "gemini-3.6-flash") {
+export async function translateGemini(direction, text, apiKey, model = "gemini-3.5-flash-lite") {
   const system = buildSystemPrompt(direction);
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
