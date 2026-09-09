@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dev-dist/
+.DS_Store
+*.log
+.vscode/
+babel.json
+
+# legacy Streamlit prototype leftovers (not part of the PWA) — keep out of git,
+# these include API key files that must never be committed
+app.py
+main.py
+chat_history.json
+openai_key.txt
+elevenlabs_key.txt
+response.mp3
+response_eleven.mp3
