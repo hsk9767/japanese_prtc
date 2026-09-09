@@ -151,13 +151,13 @@ export async function translateOnDevice(direction, text, onProgress) {
   }
 }
 
-export async function translateGemini(direction, text, apiKey, model = "gemini-2.5-flash") {
+export async function translateGemini(direction, text, apiKey, model = "gemini-3.6-flash") {
   const system = buildSystemPrompt(direction);
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: system }] },
         contents: [{ role: "user", parts: [{ text }] }],
