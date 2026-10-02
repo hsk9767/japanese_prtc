@@ -15,3 +15,6 @@ openai_key.txt
 elevenlabs_key.txt
 response.mp3
 response_eleven.mp3
+
+# scraper progress log
+public/data/.progress.log

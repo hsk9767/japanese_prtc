@@ -6,32 +6,27 @@
     <meta name="theme-color" content="#282a5e" />
     <link rel="icon" href="./icon-192.png" />
     <link rel="apple-touch-icon" href="./icon-192.png" />
-    <title>일본어 ↔ 한국어 학습</title>
+    <title>일본어 단어장</title>
   </head>
   <body>
     <div id="app">
       <header class="app-header">
-        <h1>일본어 ↔ 한국어</h1>
         <nav class="tabs">
-          <button class="tab-btn active" data-tab="jp-ko">🇯🇵→🇰🇷</button>
-          <button class="tab-btn" data-tab="ko-jp">🇰🇷→🇯🇵</button>
+          <button class="tab-btn active" data-tab="vocab">단어장</button>
           <button class="tab-btn" data-tab="settings">설정</button>
         </nav>
       </header>
 
       <main>
-        <section class="tab-panel active" data-panel="jp-ko">
-          <textarea data-input placeholder="일본어 문장을 입력하세요…"></textarea>
-          <button class="primary-btn" data-translate-btn>번역하기</button>
-          <p class="status" data-status></p>
-          <div class="result" data-result></div>
-        </section>
-
-        <section class="tab-panel" data-panel="ko-jp">
-          <textarea data-input placeholder="한국어 문장을 입력하세요…"></textarea>
-          <button class="primary-btn" data-translate-btn>번역하기</button>
-          <p class="status" data-status></p>
-          <div class="result" data-result></div>
+        <section class="tab-panel active" data-panel="vocab">
+          <div class="level-row" id="level-row"></div>
+          <p class="progress" id="progress">불러오는 중…</p>
+          <div class="action-row">
+            <button class="primary-btn" id="new-words-btn">새 단어</button>
+            <button class="secondary-btn" id="test-btn">테스트</button>
+          </div>
+          <p class="status" id="vocab-status"></p>
+          <div id="word-list" class="word-list"></div>
         </section>
 
         <section class="tab-panel" data-panel="settings"></section>

@@ -8,11 +8,11 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["icon-192.png", "icon-512.png", "icon-maskable-512.png"],
       manifest: {
-        name: "일본어 ↔ 한국어 학습",
-        short_name: "JP↔KO",
-        description: "폰 GPU로 동작하는 일본어-한국어 번역/학습 도우미",
+        name: "일본어 단어장",
+        short_name: "단어장",
+        description: "JLPT 등급별 일본어 단어 학습·테스트",
         theme_color: "#282a5e",
-        background_color: "#282a5e",
+        background_color: "#f6f7fb",
         display: "standalone",
         start_url: "./",
         scope: "./",
@@ -23,11 +23,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // App shell only. ML model weights are fetched from the HF CDN at
-        // runtime and cached by transformers.js itself via the Cache API,
-        // so they must NOT be pulled into the precache manifest here.
-        globPatterns: ["**/*.{js,css,html,svg,png}"],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        // JSON is included so the whole word list works offline once installed.
+        globPatterns: ["**/*.{js,css,html,svg,png,json}"],
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
       },
     }),
   ],
