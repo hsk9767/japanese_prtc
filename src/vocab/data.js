@@ -2,6 +2,7 @@ export const LEVELS = [5, 4, 3, 2, 1];
 export const DEFAULT_LEVEL = 3;
 
 const cache = new Map();
+let kanjiMap = null;
 
 /** Loads one JLPT level's word list (scraped from Naver, shipped as static JSON). */
 export async function loadLevel(level) {
@@ -11,6 +12,22 @@ export async function loadLevel(level) {
   const data = await res.json();
   cache.set(level, data.words);
   return data.words;
+}
+
+/** kanji character -> Naver hanja dictionary entry id. */
+export async function loadKanjiMap() {
+  if (kanjiMap) return kanjiMap;
+  try {
+    const res = await fetch("./data/kanji-entries.json");
+    kanjiMap = res.ok ? await res.json() : {};
+  } catch {
+    kanjiMap = {}; // links fall back to the hanja search page
+  }
+  return kanjiMap;
+}
+
+export function kanjiEntryId(ch) {
+  return kanjiMap?.[ch] ?? null;
 }
 
 export function pickRandom(words, count) {

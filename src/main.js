@@ -1,5 +1,5 @@
 import "./style.css";
-import { LEVELS, DEFAULT_LEVEL, loadLevel, pickRandom } from "./vocab/data.js";
+import { LEVELS, DEFAULT_LEVEL, loadLevel, loadKanjiMap, pickRandom } from "./vocab/data.js";
 import { getStudiedIds, addStudied, clearStudied } from "./vocab/progress.js";
 import { renderWordList } from "./vocab/view.js";
 
@@ -71,7 +71,7 @@ async function withBusy(fn) {
 newWordsBtn.addEventListener("click", () =>
   withBusy(async () => {
     statusEl.textContent = "단어를 불러오는 중…";
-    const words = await loadLevel(currentLevel);
+    const [words] = await Promise.all([loadLevel(currentLevel), loadKanjiMap()]);
     const studied = getStudiedIds(currentLevel);
     const fresh = words.filter((w) => !studied.has(w.id));
 
@@ -95,7 +95,7 @@ newWordsBtn.addEventListener("click", () =>
 testBtn.addEventListener("click", () =>
   withBusy(async () => {
     statusEl.textContent = "테스트를 준비하는 중…";
-    const words = await loadLevel(currentLevel);
+    const [words] = await Promise.all([loadLevel(currentLevel), loadKanjiMap()]);
     const studied = getStudiedIds(currentLevel);
     const learned = words.filter((w) => studied.has(w.id));
 
@@ -153,6 +153,7 @@ async function renderSettings() {
 
 renderLevelRow();
 updateProgress();
+loadKanjiMap();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
