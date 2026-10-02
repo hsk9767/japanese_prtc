@@ -311,3 +311,65 @@ main {
 .settings-row:last-of-type {
   border-bottom: none;
 }
+
+.batch-list {
+  margin-top: 0.5rem;
+}
+
+.batch {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.batch.open {
+  border-color: var(--accent);
+}
+
+.batch-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.batch-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.batch-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.batch-preview {
+  font-size: 1.05rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.batch.open .chevron {
+  transform: rotate(180deg);
+}
+
+.batch-body {
+  padding: 0 0.6rem 0.6rem;
+}
+
+.settings-row h3 {
+  margin: 0;
+}

@@ -1,6 +1,7 @@
 import "./style.css";
 import { LEVELS, DEFAULT_LEVEL, loadLevel, loadKanjiMap, pickRandom } from "./vocab/data.js";
 import { getStudiedIds, addStudied, clearStudied } from "./vocab/progress.js";
+import { loadBatches, saveBatch, clearBatches, formatBatchTime } from "./vocab/batches.js";
 import { renderWordList } from "./vocab/view.js";
 
 const LEVEL_KEY = "jlpt:level";
@@ -12,6 +13,7 @@ const statusEl = document.getElementById("vocab-status");
 const listEl = document.getElementById("word-list");
 const newWordsBtn = document.getElementById("new-words-btn");
 const testBtn = document.getElementById("test-btn");
+const historyPanel = document.querySelector('[data-panel="history"]');
 const settingsPanel = document.querySelector('[data-panel="settings"]');
 
 let currentLevel = Number(localStorage.getItem(LEVEL_KEY)) || DEFAULT_LEVEL;
@@ -23,6 +25,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document
       .querySelectorAll(".tab-panel")
       .forEach((p) => p.classList.toggle("active", p.dataset.panel === tab));
+    if (tab === "history") renderHistory();
     if (tab === "settings") renderSettings();
   });
 });
@@ -86,6 +89,7 @@ newWordsBtn.addEventListener("click", () =>
       currentLevel,
       picked.map((w) => w.id),
     );
+    saveBatch(currentLevel, picked);
     statusEl.textContent = "";
     renderWordList(listEl, picked, { heading: `새 단어 ${picked.length}개` });
     updateProgress();
@@ -110,6 +114,91 @@ testBtn.addEventListener("click", () =>
     renderWordList(listEl, picked, { heading: `테스트 ${picked.length}문제` });
   }),
 );
+
+function escapeText(text) {
+  const div = document.createElement("div");
+  div.textContent = text ?? "";
+  return div.innerHTML;
+}
+
+async function renderHistory() {
+  const batches = loadBatches();
+  if (!batches.length) {
+    historyPanel.innerHTML = `
+      <section class="settings-block">
+        <h3>새 단어 기록</h3>
+        <p class="muted">아직 기록이 없습니다. [새 단어]를 누르면 그때 뽑힌 10개가 여기에 쌓입니다.</p>
+      </section>`;
+    return;
+  }
+
+  await loadKanjiMap();
+
+  const byLevel = new Map();
+  for (const lv of new Set(batches.map((b) => b.level))) {
+    const words = await loadLevel(lv).catch(() => []);
+    byLevel.set(lv, new Map(words.map((w) => [w.id, w])));
+  }
+
+  const wordsOf = (batch) => {
+    const lookup = byLevel.get(batch.level) ?? new Map();
+    return batch.wordIds.map((id) => lookup.get(id)).filter(Boolean);
+  };
+
+  const items = batches
+    .map((batch) => {
+      const words = wordsOf(batch);
+      const preview = words
+        .slice(0, 4)
+        .map((w) => w.kanji || w.reading)
+        .join(" · ");
+      return `
+        <article class="batch" data-id="${batch.id}">
+          <button class="batch-head" type="button">
+            <span class="batch-info">
+              <span class="batch-meta">N${batch.level} · ${escapeText(formatBatchTime(batch.at))} · ${words.length}단어</span>
+              <span class="batch-preview">${escapeText(preview)}${words.length > 4 ? " …" : ""}</span>
+            </span>
+            <span class="chevron">▾</span>
+          </button>
+          <div class="batch-body" hidden></div>
+        </article>`;
+    })
+    .join("");
+
+  historyPanel.innerHTML = `
+    <section class="settings-block">
+      <div class="settings-row">
+        <h3>새 단어 기록 (${batches.length})</h3>
+        <button class="secondary-btn small" id="clear-batches">전체 삭제</button>
+      </div>
+      <div class="batch-list">${items}</div>
+    </section>`;
+
+  historyPanel.querySelector("#clear-batches").addEventListener("click", () => {
+    clearBatches();
+    renderHistory();
+  });
+
+  historyPanel.querySelectorAll(".batch").forEach((el) => {
+    const head = el.querySelector(".batch-head");
+    const body = el.querySelector(".batch-body");
+    head.addEventListener("click", () => {
+      const opening = body.hidden;
+      // one batch expanded at a time keeps the list scannable
+      historyPanel.querySelectorAll(".batch").forEach((other) => {
+        other.classList.remove("open");
+        other.querySelector(".batch-body").hidden = true;
+      });
+      if (!opening) return;
+
+      const batch = batches.find((b) => b.id === el.dataset.id);
+      renderWordList(body, wordsOf(batch));
+      body.hidden = false;
+      el.classList.add("open");
+    });
+  });
+}
 
 async function renderSettings() {
   const rows = await Promise.all(
