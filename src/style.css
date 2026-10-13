@@ -373,3 +373,71 @@ main {
 .settings-row h3 {
   margin: 0;
 }
+
+.paste-box {
+  width: 100%;
+  min-height: 9rem;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.settings-block .primary-btn {
+  width: 100%;
+  margin-top: 0.6rem;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.pick-list {
+  margin-top: 0.5rem;
+}
+
+.pick-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.2rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.pick-row input {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  accent-color: var(--accent);
+}
+
+.pick-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.pick-word {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.pick-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.remove-word {
+  margin-top: 0.9rem;
+  color: var(--danger);
+  border-color: var(--danger);
+}

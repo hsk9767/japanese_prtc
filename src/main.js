@@ -2,6 +2,13 @@ import "./style.css";
 import { LEVELS, DEFAULT_LEVEL, loadLevel, loadKanjiMap, pickRandom } from "./vocab/data.js";
 import { getStudiedIds, addStudied, clearStudied } from "./vocab/progress.js";
 import { loadBatches, saveBatch, clearBatches, formatBatchTime } from "./vocab/batches.js";
+import {
+  parseWordLines,
+  loadCustomWords,
+  addCustomWords,
+  removeCustomWord,
+  clearCustomWords,
+} from "./vocab/custom.js";
 import { renderWordList } from "./vocab/view.js";
 
 const LEVEL_KEY = "jlpt:level";
@@ -13,6 +20,7 @@ const statusEl = document.getElementById("vocab-status");
 const listEl = document.getElementById("word-list");
 const newWordsBtn = document.getElementById("new-words-btn");
 const testBtn = document.getElementById("test-btn");
+const addPanel = document.querySelector('[data-panel="add"]');
 const historyPanel = document.querySelector('[data-panel="history"]');
 const settingsPanel = document.querySelector('[data-panel="settings"]');
 
@@ -25,6 +33,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     document
       .querySelectorAll(".tab-panel")
       .forEach((p) => p.classList.toggle("active", p.dataset.panel === tab));
+    if (tab === "add") renderAdd();
     if (tab === "history") renderHistory();
     if (tab === "settings") renderSettings();
   });
@@ -119,6 +128,109 @@ function escapeText(text) {
   const div = document.createElement("div");
   div.textContent = text ?? "";
   return div.innerHTML;
+}
+
+
+let customMode = "all";
+
+function renderCustomList() {
+  const container = addPanel.querySelector("#custom-list");
+  if (!container) return;
+  const all = loadCustomWords();
+  if (!all.length) {
+    container.innerHTML = '<p class="muted">아직 추가한 단어가 없습니다.</p>';
+    return;
+  }
+  const words = customMode === "test" ? pickRandom(all, BATCH_SIZE) : all;
+  renderWordList(container, words, {
+    heading: customMode === "test" ? `테스트 ${words.length}문제` : null,
+    onRemove: (id) => {
+      removeCustomWord(id);
+      renderAdd();
+    },
+  });
+}
+
+function renderAdd() {
+  const custom = loadCustomWords();
+  addPanel.innerHTML = `
+    <section class="settings-block">
+      <h3>Claude 답변 붙여넣기</h3>
+      <p class="hint">Claude에게 물어본 답변을 그대로 붙여넣으면 "東京(とうきょう): 도쿄" 같은 줄을 찾아 단어로 만들어 줍니다.</p>
+      <textarea id="paste-input" class="paste-box" placeholder="여기에 붙여넣기"></textarea>
+      <button class="primary-btn" id="parse-btn">단어 찾기</button>
+      <p class="status" id="paste-status"></p>
+      <div id="parsed-list"></div>
+    </section>
+    <section class="settings-block">
+      <div class="settings-row">
+        <h3>내 단어 (${custom.length})</h3>
+        <span class="row-actions">
+          <button class="secondary-btn small" id="custom-test-btn">${customMode === "test" ? "전체 보기" : "테스트"}</button>
+          <button class="secondary-btn small" id="custom-clear-btn">전체 삭제</button>
+        </span>
+      </div>
+      <div id="custom-list"></div>
+    </section>`;
+
+  const pasteInput = addPanel.querySelector("#paste-input");
+  const pasteStatus = addPanel.querySelector("#paste-status");
+  const parsedList = addPanel.querySelector("#parsed-list");
+
+  addPanel.querySelector("#parse-btn").addEventListener("click", () => {
+    const found = parseWordLines(pasteInput.value);
+    if (!found.length) {
+      parsedList.innerHTML = "";
+      pasteStatus.textContent = "단어를 찾지 못했습니다. \"東京(とうきょう): 도쿄\" 형태의 줄이 있는지 확인해주세요.";
+      return;
+    }
+    pasteStatus.textContent = `${found.length}개를 찾았습니다. 추가할 단어를 고르세요.`;
+    parsedList.innerHTML = `
+      <div class="pick-list">
+        ${found
+          .map(
+            (w, i) => `
+          <label class="pick-row">
+            <input type="checkbox" data-idx="${i}" checked />
+            <span class="pick-info">
+              <span class="pick-word">${escapeText(w.kanji || w.reading)}</span>
+              <span class="pick-sub">${escapeText(w.reading)} · ${escapeText(w.means.join(", "))}</span>
+            </span>
+          </label>`,
+          )
+          .join("")}
+      </div>
+      <button class="primary-btn" id="add-picked">선택한 단어 추가</button>`;
+
+    parsedList.querySelector("#add-picked").addEventListener("click", () => {
+      const picked = [...parsedList.querySelectorAll("input[type=checkbox]")]
+        .filter((c) => c.checked)
+        .map((c) => found[Number(c.dataset.idx)]);
+      if (!picked.length) {
+        pasteStatus.textContent = "선택된 단어가 없습니다.";
+        return;
+      }
+      const added = addCustomWords(picked);
+      customMode = "all";
+      renderAdd();
+      const dup = picked.length - added;
+      addPanel.querySelector("#paste-status").textContent =
+        `${added}개 추가했습니다${dup > 0 ? ` (${dup}개는 이미 있음)` : ""}.`;
+    });
+  });
+
+  addPanel.querySelector("#custom-test-btn").addEventListener("click", () => {
+    customMode = customMode === "test" ? "all" : "test";
+    renderAdd();
+  });
+
+  addPanel.querySelector("#custom-clear-btn").addEventListener("click", () => {
+    clearCustomWords();
+    customMode = "all";
+    renderAdd();
+  });
+
+  renderCustomList();
 }
 
 async function renderHistory() {

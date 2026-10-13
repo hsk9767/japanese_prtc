@@ -4,6 +4,7 @@ const KANJI_RE = /[\u4e00-\u9faf\u3400-\u4dbf]/;
 const HANJA_ENTRY = "https://hanja.dict.naver.com/#/entry/ccko/";
 const HANJA_SEARCH = "https://hanja.dict.naver.com/#/search?query=";
 const JAKO_ENTRY = "https://ja.dict.naver.com/#/entry/jako/";
+const JAKO_SEARCH = "https://ja.dict.naver.com/#/search?query=";
 
 function esc(text) {
   const div = document.createElement("div");
@@ -61,12 +62,19 @@ function detailHtml(word) {
   `;
 }
 
+/** Words added by hand have no Naver entry id, so they link to a search. */
+function wordUrl(word) {
+  return word.custom
+    ? `${JAKO_SEARCH}${encodeURIComponent(word.kanji || word.reading)}`
+    : `${JAKO_ENTRY}${encodeURIComponent(word.id)}`;
+}
+
 /** Collapsed face: kanji when the word has one, otherwise its kana reading. */
 function frontText(word) {
   return word.kanji || word.reading;
 }
 
-export function renderWordList(container, words, { heading } = {}) {
+export function renderWordList(container, words, { heading, onRemove } = {}) {
   if (!words.length) {
     container.innerHTML = '<p class="muted">표시할 단어가 없습니다.</p>';
     return;
@@ -77,16 +85,27 @@ export function renderWordList(container, words, { heading } = {}) {
       (word) => `
         <article class="word-card">
           <div class="word-front">
-            <a class="word-text" href="${JAKO_ENTRY}${encodeURIComponent(word.id)}" target="_blank" rel="noopener">${esc(frontText(word))}</a>
+            <a class="word-text" href="${wordUrl(word)}" target="_blank" rel="noopener">${esc(frontText(word))}</a>
             <span class="chevron">▾</span>
           </div>
-          <div class="word-detail" hidden>${detailHtml(word)}</div>
+          <div class="word-detail" hidden>${detailHtml(word)}${
+            onRemove ? `<button class="secondary-btn small remove-word" data-id="${esc(word.id)}">이 단어 삭제</button>` : ""
+          }</div>
         </article>
       `,
     )
     .join("");
 
   container.innerHTML = `${heading ? `<h2 class="list-heading">${esc(heading)}</h2>` : ""}${cards}`;
+
+  if (onRemove) {
+    container.querySelectorAll(".remove-word").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        onRemove(btn.dataset.id);
+      });
+    });
+  }
 
   container.querySelectorAll(".word-card").forEach((card) => {
     const front = card.querySelector(".word-front");
