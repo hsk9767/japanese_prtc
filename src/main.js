@@ -167,14 +167,8 @@ function renderAdd() {
       <input id="search-input" class="search-box" type="search" placeholder="예: かぜ · 風 · 바람" />
       <div class="search-actions">
         <button class="secondary-btn small" id="paste-clip" type="button">붙여넣기</button>
-        <a
-          class="secondary-btn small link-btn"
-          href="https://hanja.dict.naver.com/#/naverdict/handwriting"
-          target="_blank"
-          rel="noopener"
-        >한자 그려서 찾기</a>
       </div>
-      <p class="hint">못 읽는 한자는 [한자 그려서 찾기]로 네이버에서 그려 찾은 뒤, 그 한자를 복사해 [붙여넣기]를 누르세요.</p>
+      <p class="hint">못 읽는 한자는 Gboard에 일본어 키보드를 추가한 뒤 <strong>손글씨 모드로 위 검색창에 직접 그려</strong> 넣으세요. 다른 앱에서 복사한 단어는 [붙여넣기]로 바로 검색됩니다.</p>
       <p class="status" id="search-status"></p>
       <div id="search-results"></div>
     </section>
