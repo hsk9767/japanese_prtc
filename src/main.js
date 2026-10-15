@@ -165,6 +165,16 @@ function renderAdd() {
       <h3>단어 찾기</h3>
       <p class="hint">가나·한자·한국어 뜻 아무거나 입력하세요. 한자 한 글자만 넣어도 그 한자가 들어간 단어를 보여줍니다.</p>
       <input id="search-input" class="search-box" type="search" placeholder="예: かぜ · 風 · 바람" />
+      <div class="search-actions">
+        <button class="secondary-btn small" id="paste-clip" type="button">붙여넣기</button>
+        <a
+          class="secondary-btn small link-btn"
+          href="https://hanja.dict.naver.com/#/naverdict/handwriting"
+          target="_blank"
+          rel="noopener"
+        >한자 그려서 찾기</a>
+      </div>
+      <p class="hint">못 읽는 한자는 [한자 그려서 찾기]로 네이버에서 그려 찾은 뒤, 그 한자를 복사해 [붙여넣기]를 누르세요.</p>
       <p class="status" id="search-status"></p>
       <div id="search-results"></div>
     </section>
@@ -299,6 +309,17 @@ function wireSearch() {
   input.addEventListener("input", () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(run, 150);
+  });
+
+  addPanel.querySelector("#paste-clip").addEventListener("click", async () => {
+    try {
+      const text = (await navigator.clipboard.readText()).trim();
+      if (!text) return;
+      input.value = text;
+      run();
+    } catch {
+      status.textContent = "클립보드를 읽지 못했습니다. 검색창을 길게 눌러 붙여넣어 주세요.";
+    }
   });
 }
 
