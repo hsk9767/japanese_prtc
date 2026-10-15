@@ -17,6 +17,7 @@ import {
   clearCustomWords,
 } from "./vocab/custom.js";
 import { renderWordList } from "./vocab/view.js";
+import { renderHandwritingPad } from "./vocab/handwriting.js";
 
 const LEVEL_KEY = "jlpt:level";
 const BATCH_SIZE = 10;
@@ -166,9 +167,11 @@ function renderAdd() {
       <p class="hint">가나·한자·한국어 뜻 아무거나 입력하세요. 한자 한 글자만 넣어도 그 한자가 들어간 단어를 보여줍니다.</p>
       <input id="search-input" class="search-box" type="search" placeholder="예: かぜ · 風 · 바람" />
       <div class="search-actions">
+        <button class="secondary-btn small" id="toggle-hw" type="button">손글씨로 찾기</button>
         <button class="secondary-btn small" id="paste-clip" type="button">붙여넣기</button>
       </div>
-      <p class="hint">못 읽는 한자는 Gboard에 일본어 키보드를 추가한 뒤 <strong>손글씨 모드로 위 검색창에 직접 그려</strong> 넣으세요. 다른 앱에서 복사한 단어는 [붙여넣기]로 바로 검색됩니다.</p>
+      <div id="hw-container" hidden></div>
+      <p class="hint">못 읽는 한자는 [손글씨로 찾기]로 직접 그려서 넣으세요. 다른 앱에서 복사한 단어는 [붙여넣기]로 바로 검색됩니다.</p>
       <p class="status" id="search-status"></p>
       <div id="search-results"></div>
     </section>
@@ -303,6 +306,21 @@ function wireSearch() {
   input.addEventListener("input", () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(run, 150);
+  });
+
+  const hwBtn = addPanel.querySelector("#toggle-hw");
+  const hwContainer = addPanel.querySelector("#hw-container");
+  hwBtn.addEventListener("click", async () => {
+    const opening = hwContainer.hidden;
+    hwContainer.hidden = !opening;
+    hwBtn.textContent = opening ? "손글씨 닫기" : "손글씨로 찾기";
+    if (opening && !hwContainer.dataset.ready) {
+      hwContainer.dataset.ready = "1";
+      await renderHandwritingPad(hwContainer, (ch) => {
+        input.value += ch;
+        run();
+      });
+    }
   });
 
   addPanel.querySelector("#paste-clip").addEventListener("click", async () => {

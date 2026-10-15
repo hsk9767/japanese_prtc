@@ -502,3 +502,57 @@ main {
   justify-content: center;
   text-decoration: none;
 }
+
+.hw-pad {
+  margin-top: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.hw-canvas {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  touch-action: none;
+}
+
+.hw-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.hw-actions > * {
+  flex: 1;
+}
+
+.hw-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.hw-candidate {
+  min-width: 2.6rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.5rem;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.hw-candidate:active {
+  border-color: var(--accent);
+  color: var(--accent);
+}

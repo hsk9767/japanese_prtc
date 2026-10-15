@@ -25,7 +25,17 @@ export default defineConfig({
       workbox: {
         // JSON is included so the whole word list works offline once installed.
         globPatterns: ["**/*.{js,css,html,svg,png,json}"],
+        // the 6.7MB stroke database would bloat install; fetched on first use
+        // of the handwriting pad and kept by the runtime cache below
+        globIgnores: ["**/vendor/kanjicanvas/ref-patterns.js"],
         maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
+        runtimeCaching: [
+          {
+            urlPattern: /vendor\/kanjicanvas\//,
+            handler: "CacheFirst",
+            options: { cacheName: "kanjicanvas", expiration: { maxEntries: 8 } },
+          },
+        ],
       },
     }),
   ],
