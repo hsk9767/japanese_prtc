@@ -1,5 +1,12 @@
 import "./style.css";
-import { LEVELS, DEFAULT_LEVEL, loadLevel, loadKanjiMap, pickRandom } from "./vocab/data.js";
+import {
+  LEVELS,
+  DEFAULT_LEVEL,
+  loadLevel,
+  loadKanjiMap,
+  pickRandom,
+  searchWords,
+} from "./vocab/data.js";
 import { getStudiedIds, addStudied, clearStudied } from "./vocab/progress.js";
 import { loadBatches, saveBatch, clearBatches, formatBatchTime } from "./vocab/batches.js";
 import {
@@ -155,6 +162,13 @@ function renderAdd() {
   const custom = loadCustomWords();
   addPanel.innerHTML = `
     <section class="settings-block">
+      <h3>단어 찾기</h3>
+      <p class="hint">가나·한자·한국어 뜻 아무거나 입력하세요. 한자 한 글자만 넣어도 그 한자가 들어간 단어를 보여줍니다.</p>
+      <input id="search-input" class="search-box" type="search" placeholder="예: かぜ · 風 · 바람" />
+      <p class="status" id="search-status"></p>
+      <div id="search-results"></div>
+    </section>
+    <section class="settings-block">
       <h3>Claude 답변 붙여넣기</h3>
       <p class="hint">Claude에게 물어본 답변을 그대로 붙여넣으면 "東京(とうきょう): 도쿄" 같은 줄을 찾아 단어로 만들어 줍니다.</p>
       <textarea id="paste-input" class="paste-box" placeholder="여기에 붙여넣기"></textarea>
@@ -164,7 +178,7 @@ function renderAdd() {
     </section>
     <section class="settings-block">
       <div class="settings-row">
-        <h3>내 단어 (${custom.length})</h3>
+        <h3 id="custom-count">내 단어 (${custom.length})</h3>
         <span class="row-actions">
           <button class="secondary-btn small" id="custom-test-btn">${customMode === "test" ? "전체 보기" : "테스트"}</button>
           <button class="secondary-btn small" id="custom-clear-btn">전체 삭제</button>
@@ -230,7 +244,62 @@ function renderAdd() {
     renderAdd();
   });
 
+  wireSearch();
   renderCustomList();
+}
+
+function refreshCustomCount() {
+  const el = addPanel.querySelector("#custom-count");
+  if (el) el.textContent = `내 단어 (${loadCustomWords().length})`;
+}
+
+let searchTimer = null;
+
+function wireSearch() {
+  const input = addPanel.querySelector("#search-input");
+  const status = addPanel.querySelector("#search-status");
+  const results = addPanel.querySelector("#search-results");
+
+  const run = async () => {
+    const query = input.value.trim();
+    if (!query) {
+      results.innerHTML = "";
+      status.textContent = "";
+      return;
+    }
+
+    status.textContent = "찾는 중…";
+    await loadKanjiMap();
+    const saved = loadCustomWords();
+    const { words: hits, usedQuery, exact } = await searchWords(query, saved);
+
+    if (!hits.length) {
+      results.innerHTML = "";
+      status.textContent = "해당하는 단어가 없습니다.";
+      return;
+    }
+
+    const savedKeys = new Set(saved.map((w) => `${w.kanji ?? ""}|${w.reading}`));
+    status.textContent = exact
+      ? `${hits.length}개 찾았습니다.`
+      : `정확히 일치하는 단어가 없어 "${usedQuery}"(으)로 찾은 결과입니다.`;
+    renderWordList(results, hits, {
+      isAdded: (w) => savedKeys.has(`${w.kanji ?? ""}|${w.reading}`),
+      onAdd: (word, btn) => {
+        addCustomWords([word]);
+        savedKeys.add(`${word.kanji ?? ""}|${word.reading}`);
+        btn.disabled = true;
+        btn.textContent = "이미 내 단어에 있음";
+        refreshCustomCount();
+        renderCustomList();
+      },
+    });
+  };
+
+  input.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(run, 150);
+  });
 }
 
 async function renderHistory() {

@@ -441,3 +441,47 @@ main {
   color: var(--danger);
   border-color: var(--danger);
 }
+
+.search-box {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.search-box:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.word-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.level-badge {
+  flex: 0 0 auto;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.add-word {
+  margin-top: 0.9rem;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.add-word:disabled {
+  color: var(--muted);
+  border-color: var(--border);
+}

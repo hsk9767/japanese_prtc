@@ -69,6 +69,8 @@ export function addCustomWords(words) {
     seen.add(wordKey(word));
     added.push({
       id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      // dictionary hits keep their Naver entry id so the word still deep-links
+      naverId: /^[0-9a-f]{32}$/.test(String(word.id ?? "")) ? word.id : null,
       reading: word.reading,
       kanji: word.kanji ?? null,
       means: word.means ?? [],

@@ -64,6 +64,7 @@ function detailHtml(word) {
 
 /** Words added by hand have no Naver entry id, so they link to a search. */
 function wordUrl(word) {
+  if (word.naverId) return `${JAKO_ENTRY}${encodeURIComponent(word.naverId)}`;
   return word.custom
     ? `${JAKO_SEARCH}${encodeURIComponent(word.kanji || word.reading)}`
     : `${JAKO_ENTRY}${encodeURIComponent(word.id)}`;
@@ -74,7 +75,7 @@ function frontText(word) {
   return word.kanji || word.reading;
 }
 
-export function renderWordList(container, words, { heading, onRemove } = {}) {
+export function renderWordList(container, words, { heading, onRemove, onAdd, isAdded } = {}) {
   if (!words.length) {
     container.innerHTML = '<p class="muted">표시할 단어가 없습니다.</p>';
     return;
@@ -85,11 +86,20 @@ export function renderWordList(container, words, { heading, onRemove } = {}) {
       (word) => `
         <article class="word-card">
           <div class="word-front">
-            <a class="word-text" href="${wordUrl(word)}" target="_blank" rel="noopener">${esc(frontText(word))}</a>
+            <span class="word-head">
+              ${word.level ? `<span class="level-badge">N${word.level}</span>` : ""}
+              <a class="word-text" href="${wordUrl(word)}" target="_blank" rel="noopener">${esc(frontText(word))}</a>
+            </span>
             <span class="chevron">▾</span>
           </div>
           <div class="word-detail" hidden>${detailHtml(word)}${
             onRemove ? `<button class="secondary-btn small remove-word" data-id="${esc(word.id)}">이 단어 삭제</button>` : ""
+          }${
+            onAdd
+              ? `<button class="secondary-btn small add-word" data-id="${esc(word.id)}" ${isAdded?.(word) ? "disabled" : ""}>${
+                  isAdded?.(word) ? "이미 내 단어에 있음" : "내 단어에 추가"
+                }</button>`
+              : ""
           }</div>
         </article>
       `,
@@ -103,6 +113,18 @@ export function renderWordList(container, words, { heading, onRemove } = {}) {
       btn.addEventListener("click", (event) => {
         event.stopPropagation();
         onRemove(btn.dataset.id);
+      });
+    });
+  }
+
+  if (onAdd) {
+    container.querySelectorAll(".add-word").forEach((btn) => {
+      btn.addEventListener("click", (event) => {
+        event.stopPropagation();
+        onAdd(
+          words.find((w) => String(w.id) === btn.dataset.id),
+          btn,
+        );
       });
     });
   }
